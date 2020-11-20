@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 
 		/** add new dbus event to the newly dbus object */
         nf_pwr_ctrl::nfpwrIface[i]->register_property("Asserted",
-            std::string("xyz.openbmc_project.Control.NF.Power.On"),
+            std::string("xyz.openbmc_project.Control.NF.Power.Off"),
             sdbusplus::asio::PropertyPermission::readWrite);
         nf_pwr_ctrl::nfpwrIface[i]->initialize();
     }
