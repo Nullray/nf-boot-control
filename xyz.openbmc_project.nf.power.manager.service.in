@@ -8,7 +8,7 @@ StartLimitBurst=10
 ExecStart=@bindir@/nf_pwr_ctrl
 SyslogIdentifier=nf_pwr_ctrl
 Type=dbus
-BusName=xyz.openbmc_project.NF.Blade.Power
+BusName=xyz.openbmc_project.nf.power.manager
 
 [Install]
 WantedBy=multi-user.target
