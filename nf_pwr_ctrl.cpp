@@ -83,7 +83,7 @@ static void PowerControl()
                  token = obj_path.substr(0, pos);
                  obj_path.erase(0, pos + delimiter.length());
             }
-            line_name.assign(obj_path);
+            line_name = "slot_" + obj_path.substr(5, 2) + "_pwr";
             std::cerr << "line_name: " << line_name << "\n";
 
             try
