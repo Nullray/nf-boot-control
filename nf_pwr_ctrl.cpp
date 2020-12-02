@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 						nf_pwr_ctrl::GPIOLine(line_name, 0, line, value);
 						line.reset();
 							
-						return token + "." + (value ? "false" : "true");
+						return property.substr(0, pos + 1) + (value ? "false" : "true");
 			});
 
       nf_pwr_ctrl::nfBladeIface[i]->initialize();
