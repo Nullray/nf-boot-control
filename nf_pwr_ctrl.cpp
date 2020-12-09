@@ -27,6 +27,9 @@ static std::string nfpwrOut[MAX_NF_CARD_NUMS];
 static std::string nfprsntTemplate = "slot_x_prsnt";
 static std::string nfprsntIn[MAX_NF_CARD_NUMS];
 
+static std::string nfresetnTemplate = "slot_x_resetn";
+static std::string nfresetnOut[MAX_NF_CARD_NUMS];
+
 static bool GPIOLine(const std::string& name, const int out,
                           gpiod::line& gpioLine, int& value)
 {
@@ -142,6 +145,14 @@ int main(int argc, char* argv[])
 			
 			/** set slot_x_prsnt physical gpio name */
 			nf_pwr_ctrl::nfprsntIn[i].assign(gpio_name);
+
+			/** construct slot_x_resetn gpio name */
+			gpio_name.clear();
+			gpio_name.assign(nf_pwr_ctrl::nfresetnTemplate);
+			gpio_name.replace(gpio_name.find("x"), 1, std::to_string(i));
+			
+			/** set slot_x_prsnt physical gpio name */
+			nf_pwr_ctrl::nfresetnOut[i].assign(gpio_name);
 			
 			/** set nf blade dbus path */
 			nf_pwr_ctrl::nfBladePath[i] = 
@@ -156,6 +167,35 @@ int main(int argc, char* argv[])
 			nf_pwr_ctrl::nfBladeIface[i]->register_property("Asserted",
 					std::string("Power.Off"),
 					sdbusplus::asio::PropertyPermission::readWrite);
+
+			/** add *Reset* dbus property to nf/blade<x>/ dbus object */
+			nf_pwr_ctrl::nfBladeIface[i]->register_property("WarmReset",
+					std::to_string(i) + std::string(".Done"),
+					//custom set
+					[](const std::string& req, const std::string& property) {
+						std::string line_name;
+						size_t pos = 0;
+							
+						/* construct slot_x_resetn as name of the GPIO line */
+						pos = property.find(".");
+						line_name = "slot_" + property.substr(0, pos) + "_resetn";
+
+						/* parsing warm reset command */
+						std::string reset_cmd;
+						pos = req.find(".");
+						reset_cmd = assign(req.substr(pos + 1, req.length()));
+
+						if (reset_cmd == "Force")
+						{
+						  /* reset output */
+						  gpiod::line line;
+						  int value = 0;
+						  nf_pwr_ctrl::GPIOLine(line_name, 1, line, value);
+						  line.reset();
+						}
+						/* There is no need to update D-Bus attribute value */
+						return 1;
+					});
 			
 			/** add *Attached* dbus property to nf/blade<x>/ dbus object */
 			nf_pwr_ctrl::nfBladeIface[i]->register_property_r("Attached",
@@ -182,14 +222,19 @@ int main(int argc, char* argv[])
       nf_pwr_ctrl::nfBladeIface[i]->initialize();
 		}
 
-    // Initialize SLOT_PWR and SLOT_PRSNT GPIOs
+    // Initialize SLOT_PWR, SLOT_PRSNT and SLOT_RESETN GPIOs
 		// NOTE: Each power GPIO pin of a NF slot would be asserted (poweroff) after booted
+		// NOTE: Each warm reset GPIO pin of a NF slot would be asserted (no reset) after booted
     gpiod::line gpioLine;
 		int value = 1;
     for (i = 0; i < MAX_NF_CARD_NUMS; i++) {
 			// set output GPIO with initial value 1
 			if (!nf_pwr_ctrl::GPIOLine(
 						nf_pwr_ctrl::nfpwrOut[i], 1, gpioLine, value))
+				return -1;
+
+			if (!nf_pwr_ctrl::GPIOLine(
+						nf_pwr_ctrl::nfresetnOut[i], 1, gpioLine, value))
 				return -1;
 			
 			// set input GPIO
