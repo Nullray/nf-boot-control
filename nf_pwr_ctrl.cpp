@@ -62,6 +62,21 @@ static bool GPIOLine(const std::string& name, const int out,
   return true;
 }
 
+static void ObjPathtoLineName(std::string &obj_path, std::string &line_name)
+{
+  size_t pos = 0;
+  std::string token;    
+  std::string delimiter = "/";
+  std::string blade_fix = "blade";
+
+  while((pos = obj_path.find(delimiter)) != std::string::npos) {
+    token = obj_path.substr(0, pos);
+    obj_path.erase(0, pos + delimiter.length());
+  }
+  line_name = "slot_" + obj_path.substr(blade_fix.length(), 2) + line_name;
+  std::cerr << "line_name: " << line_name << "\n";
+}
+
 static void PowerControl()
 {
   static auto match = sdbusplus::bus::match::match(
@@ -78,16 +93,9 @@ static void PowerControl()
         std::string obj_path;
         obj_path = m.get_path();
 
-        std::string line_name;
-        size_t pos = 0;
-        std::string token;
-        std::string delimiter = "/";
-        while((pos = obj_path.find(delimiter)) != std::string::npos) {
-          token = obj_path.substr(0, pos);
-          obj_path.erase(0, pos + delimiter.length());
-        }
-        line_name = "slot_" + obj_path.substr(5, 2) + "_pwr";
-        std::cerr << "line_name: " << line_name << "\n";
+        std::string line_name = "_pwr";
+
+        ObjPathtoLineName(obj_path, line_name);
         
         try
         {
@@ -153,10 +161,14 @@ int main(int argc, char* argv[])
     
     /** set slot_x_prsnt physical gpio name */
     nf_pwr_ctrl::nfresetnOut[i].assign(gpio_name);
+
+    std::string current_blade;
     
     /** set nf blade dbus path */
     nf_pwr_ctrl::nfBladePath[i] = 
       nf_pwr_ctrl::nfPowerPath + "blade" + std::to_string(i);
+
+    current_blade.assign(nf_pwr_ctrl::nfBladePath[i].c_str());
     
     /** setup nf/blade<x> dbus object */
     nf_pwr_ctrl::nfBladeIface[i] = 
@@ -170,22 +182,16 @@ int main(int argc, char* argv[])
     
     /** add *Reset* dbus property to nf/blade<x>/ dbus object */
     nf_pwr_ctrl::nfBladeIface[i]->register_property("WarmReset", 
-        std::to_string(i) + std::string(".Done"), 
+        std::string("Done"), 
         //custom set
-        [](const std::string& req, const std::string& property) {
-          std::string line_name;
-          size_t pos = 0;
-          
-          /* construct slot_x_resetn as name of the GPIO line */
-          pos = property.find(".");
-          line_name = "slot_" + property.substr(0, pos) + "_resetn";
-          
-          /* parsing warm reset command */
-          std::string reset_cmd;
-          pos = req.find(".");
-          reset_cmd.assign(req.substr(pos + 1, req.length()));
-          
-          if (reset_cmd == "Force")
+        [current_blade](const std::string& req, const std::string& property) {
+          std::string line_name = "_resetn";
+          std::string obj_path;
+          obj_path.assign(current_blade.c_str());
+
+          nf_pwr_ctrl::ObjPathtoLineName(obj_path, line_name);
+
+          if (req == "Force")
           {
             /* reset output */
             gpiod::line line;
@@ -199,24 +205,23 @@ int main(int argc, char* argv[])
     
     /** add *Attached* dbus property to nf/blade<x>/ dbus object */
     nf_pwr_ctrl::nfBladeIface[i]->register_property_r("Attached", 
-        std::to_string(i) + std::string(".false"), 
+        std::string("false"), 
         sdbusplus::vtable::property_::none,
         //custom get
-        [](const std::string& property) {
-          std::string line_name;
-          size_t pos = 0;
+        [current_blade](const std::string& property) {
+          std::string line_name = "_prsnt";
+          std::string obj_path;
+          obj_path.assign(current_blade.c_str());
           
-          /* construct slot_x_prsnt as name of the GPIO line */
-          pos = property.find(".");
-          line_name = "slot_" + property.substr(0, pos) + "_prsnt";
-          
+          nf_pwr_ctrl::ObjPathtoLineName(obj_path, line_name);
+
           /* read GPIO line */
           gpiod::line line;
           int value;
           nf_pwr_ctrl::GPIOLine(line_name, 0, line, value);
           line.reset();
           
-          return property.substr(0, pos + 1) + (value ? "false" : "true");
+          return (value ? "false" : "true");
       });
     
     nf_pwr_ctrl::nfBladeIface[i]->initialize();

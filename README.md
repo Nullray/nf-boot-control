@@ -6,8 +6,8 @@ could be set from host to control NF card slot.
 * DBus Interface: ```xyz.openbmc_project.NF.Blade.Power```
 
 * Attached Property (read-only): ```/xyz/openbmc_project/control/nf/blade<x>/attr/Attached```   
-(x.true: One NF card is attached onto slot #.x)   
-(x.false: NO NF card is attached onto slot #.x)   
+(true: One NF card is attached onto slot #.x)   
+(false: NO NF card is attached onto slot #.x)   
 Such property is controlled by GPIO line SLOT_PRSNT
 
 * Asserted Property (read-write): ```/xyz/openbmc_project/control/nf/blade<x>/attr/Asserted```
@@ -16,8 +16,8 @@ Such property is controlled by GPIO line SLOT_PRSNT
 Such property is controlled by GPIO line SLOT_PWR
 
 * WarmReset Property (read-write): ```/xyz/openbmc_project/control/nf/blade<x>/attr/Reset```
-(x.Force: trigger warm reset of the NF card on slot #.x)   
-(x.Done: warm reset of the NF card on slot #.x is finished)   
+(Force: trigger warm reset of the NF card on slot #.x, used in PUT)   
+(Done: warm reset of the NF card on slot #.x is finished, queried from GET)   
 Such property is controlled by GPIO line SLOT_RESETN
 
 SLOT_PRSNT, SLOT_PWR and SLOT_RESET are the GPIO pins from GPIO expanders and 
