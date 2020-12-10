@@ -4,6 +4,7 @@
 #include <string.h>
 #include <iostream>
 #include <ctype.h>
+#include <unistd.h>
 #include <sdbusplus/asio/object_server.hpp>
 #include <sdbusplus/vtable.hpp>
 #include <variant>
@@ -197,6 +198,12 @@ int main(int argc, char* argv[])
             gpiod::line line;
             int value = 0;
             nf_pwr_ctrl::GPIOLine(line_name, 1, line, value);
+
+            usleep(5000);
+
+            value = 1;
+            nf_pwr_ctrl::GPIOLine(line_name, 1, line, value);
+
             line.reset();
           }
           /* There is no need to update D-Bus attribute value */
