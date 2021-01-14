@@ -11,6 +11,9 @@
 
 #define MAX_NF_CARD_NUMS 16
 
+#define GPIO_IN   0
+#define GPIO_OUT  1
+
 namespace nf_pwr_ctrl
 {
 static boost::asio::io_service io;
@@ -30,6 +33,9 @@ static std::string nfprsntIn[MAX_NF_CARD_NUMS];
 
 static std::string nfresetnTemplate = "slot_x_resetn";
 static std::string nfresetnOut[MAX_NF_CARD_NUMS];
+
+static std::string nfintfselTemplate = "nf_uart_jtag_x_sel";
+static std::string nfintfselOut[MAX_NF_CARD_NUMS];
 
 static bool GPIOLine(const std::string& name, const int out,
                           gpiod::line& gpioLine, int& value)
@@ -110,7 +116,7 @@ static void PowerControl()
           else
             value = 1;
           
-          GPIOLine(line_name, 1, line, value);
+          GPIOLine(line_name, GPIO_OUT, line, value);
 
           // Release line
           line.reset();
@@ -163,6 +169,14 @@ int main(int argc, char* argv[])
     /** set slot_x_prsnt physical gpio name */
     nf_pwr_ctrl::nfresetnOut[i].assign(gpio_name);
 
+    /** construct nf_uart_jtag_x_sel gpio name */
+    gpio_name.clear();
+    gpio_name.assign(nf_pwr_ctrl::nfintfselTemplate);
+    gpio_name.replace(gpio_name.find("x"), 1, std::to_string(i));
+    
+    /** set slot_x_pwr physical gpio name */
+    nf_pwr_ctrl::nfintfselOut[i].assign(gpio_name);
+
     std::string current_blade;
     
     /** set nf blade dbus path */
@@ -197,12 +211,12 @@ int main(int argc, char* argv[])
             /* reset output */
             gpiod::line line;
             int value = 0;
-            nf_pwr_ctrl::GPIOLine(line_name, 1, line, value);
+            nf_pwr_ctrl::GPIOLine(line_name, GPIO_OUT, line, value);
 
             usleep(5000);
 
             value = 1;
-            nf_pwr_ctrl::GPIOLine(line_name, 1, line, value);
+            nf_pwr_ctrl::GPIOLine(line_name, GPIO_OUT, line, value);
 
             line.reset();
           }
@@ -225,7 +239,7 @@ int main(int argc, char* argv[])
           /* read GPIO line */
           gpiod::line line;
           int value;
-          nf_pwr_ctrl::GPIOLine(line_name, 0, line, value);
+          nf_pwr_ctrl::GPIOLine(line_name, GPIO_IN, line, value);
           line.reset();
           
           return (value ? "false" : "true");
@@ -242,16 +256,22 @@ int main(int argc, char* argv[])
   for (i = 0; i < MAX_NF_CARD_NUMS; i++) {
     // set output GPIO with initial value 1
     if (!nf_pwr_ctrl::GPIOLine(
-          nf_pwr_ctrl::nfpwrOut[i], 1, gpioLine, value))
+          nf_pwr_ctrl::nfpwrOut[i], GPIO_OUT, gpioLine, value))
       return -1;
     
     if (!nf_pwr_ctrl::GPIOLine(
-          nf_pwr_ctrl::nfresetnOut[i], 1, gpioLine, value))
+          nf_pwr_ctrl::nfresetnOut[i], GPIO_OUT, gpioLine, value))
+      return -1;
+
+    value = 0;
+    // set UART and JTAG of each NF card to BH motherboard as default
+    if (!nf_pwr_ctrl::GPIOLine(
+          nf_pwr_ctrl::nfintfselOut[i], GPIO_OUT, gpioLine, value))
       return -1;
     
     // set input GPIO
     if (!nf_pwr_ctrl::GPIOLine(
-          nf_pwr_ctrl::nfprsntIn[i], 0, gpioLine, value))
+          nf_pwr_ctrl::nfprsntIn[i], GPIO_IN, gpioLine, value))
       return -1;
   }
   
