@@ -252,8 +252,10 @@ int main(int argc, char* argv[])
   // NOTE: Each power GPIO pin of a NF slot would be asserted (poweroff) after booted
   // NOTE: Each warm reset GPIO pin of a NF slot would be asserted (no reset) after booted
   gpiod::line gpioLine;
-  int value = 1;
+  int value;
   for (i = 0; i < MAX_NF_CARD_NUMS; i++) {
+    value = 1;
+
     // set output GPIO with initial value 1
     if (!nf_pwr_ctrl::GPIOLine(
           nf_pwr_ctrl::nfpwrOut[i], GPIO_OUT, gpioLine, value))
