@@ -86,27 +86,27 @@ namespace nf_pwr_ctrl
 
   static void CriticalhighPowerControl(sdbusplus::message::message& msg) {
       std::cerr << "[PWCTL_log] critical high power control reached!";
-      double assertValue;
-      std::string pth = "emptypath";
-      std::string sdr = "emptysender";
-      std::string dst = "emptydest";
+      std::string interfaceName;
+      boost::container::flat_map<std::string,
+          std::variant<bool, std::string>> propertiesChanged;
       try
       {
-
-          pth = std::string(msg.get_path());
-          std::cerr << "[PWCTL_log]path1"<<pth<<std::endl;
-          sdr = std::string(msg.get_sender());
-          std::cerr << "[PWCTL_log]sender2"<<sdr<<std::endl;
-          msg.read(assertValue);
+          msg.read(interfaceName,propertiesChanged);
       }
       catch (sdbusplus::exception_t&)
       {
-          std::cerr << "error getting assert signal data";
+          std::cerr << "[PWCTL_log]error reading message";
           return;
       }
+      // state: interface property state
+      bool state = std::get<bool>(propertiesChanged.begin()->second);
+      // alarm high or alarm low
+      bool highAlarm = (propertiesChanged.begin()->first == "CriticalAlarmHigh");
+      if (state == false || highAlarm == false)return;
+
       static std::string pathFront = "/xyz/openbmc_project/sensors/power/NF";
       static std::string pathEnd = "_power";
-      std::string sender = std::string(msg.get_sender());
+      
       std::string path = std::string(msg.get_path());
       //regex path to get the name of the sensor who send the critical message
       if (path.substr(0, pathFront.length()) == pathFront) {
@@ -221,7 +221,6 @@ namespace nf_pwr_ctrl
         "path_namespace='/xyz/openbmc_project/sensors/power',"
         "arg0='xyz.openbmc_project.Sensor.Threshold.Critical'",
         [](sdbusplus::message::message& m) {
-            std::cerr << "[PWCTL_log]match a high Alarm Assert"<<m.get_path()<<std::endl;
             CriticalhighPowerControl(m);
         }
     );
