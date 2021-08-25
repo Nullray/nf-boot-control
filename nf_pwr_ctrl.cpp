@@ -94,7 +94,7 @@ namespace nf_pwr_ctrl
       catch (sdbusplus::exception_t&)
       {
           std::cerr << "error getting assert signal data from " << msg.get_path()
-              << "\n";
+              << " interface = "<<msg.get_interface()<<"\tdestination = "<<msg.get_destination() << "\n";
           return;
       }
       static std::string pathFront = "/xyz/openbmc_project/sensors/power/NF";
@@ -210,9 +210,8 @@ namespace nf_pwr_ctrl
       });
     static auto powermatch = sdbusplus::bus::match::match(
         *conn,
-        "type='signal',member='PropertiesChanged',"
-        "path_namespace='/xyz/openbmc_project/sensors/power',"
-        "arg0='xyz.openbmc_project.Sensor.Threshold.CriticalAlarmHigh'",
+        "type='signal',member='CriticalHighAlarmAsserted',"
+        "path_namespace='/xyz/openbmc_project/sensors/power'",
         [](sdbusplus::message::message& m) {
             std::cerr << "[PWCTL_log]match a high Alarm Assert"<<m.get_path()<<std::endl;
             CriticalhighPowerControl(m);
