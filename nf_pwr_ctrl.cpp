@@ -212,7 +212,7 @@ namespace nf_pwr_ctrl
         *conn,
         "type='signal',member='PropertiesChanged',"
         "path_namespace='/xyz/openbmc_project/sensors/power',"
-        "arg0='xyz.openbmc_project.Sensor.Threshold.Critical'",
+        "arg0='xyz.openbmc_project.Sensor.Threshold.CriticalAlarmHigh'"
         [](sdbusplus::message::message& m) {
             std::cerr << "[PWCTL_log]match a high Alarm Assert"<<m.get_path()<<std::endl;
             CriticalhighPowerControl(m);
