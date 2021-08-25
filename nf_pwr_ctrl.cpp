@@ -88,19 +88,20 @@ namespace nf_pwr_ctrl
       std::cerr << "[PWCTL_log] critical high power control reached!";
       double assertValue;
       std::string pth = "emptypath";
-      std::string inter = "emptyinterface";
+      std::string sdr = "emptysender";
       std::string dst = "emptydest";
       try
       {
-          pth = msg.get_path();
-          inter = msg.get_interface();
-              dst = msg.get_destination();
+          std::cerr << "[PWCTL_log] msg = " << msg << std::endl;
+          pth = std::string(msg.get_path());
+          std::cerr << "[PWCTL_log]path1"<<pth<<std::endl;
+          sdr = std::string(msg.get_sender());
+          std::cerr << "[PWCTL_log]sender2"<<sdr<<std::endl;
           msg.read(assertValue);
       }
       catch (sdbusplus::exception_t&)
       {
-          std::cerr << "error getting assert signal data from " << pth
-              << "\tinterface = "<<inter<<"\tdestination = "<< dst << "\n";
+          std::cerr << "error getting assert signal data";
           return;
       }
       static std::string pathFront = "/xyz/openbmc_project/sensors/power/NF";
