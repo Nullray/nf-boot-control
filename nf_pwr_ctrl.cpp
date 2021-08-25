@@ -92,7 +92,7 @@ namespace nf_pwr_ctrl
       std::string dst = "emptydest";
       try
       {
-          std::cerr << "[PWCTL_log] msg = " << msg << std::endl;
+
           pth = std::string(msg.get_path());
           std::cerr << "[PWCTL_log]path1"<<pth<<std::endl;
           sdr = std::string(msg.get_sender());
