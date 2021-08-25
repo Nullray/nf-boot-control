@@ -85,7 +85,6 @@ namespace nf_pwr_ctrl
   }
 
   static void CriticalhighPowerControl(sdbusplus::message::message& msg) {
-      std::cerr << "[PWCTL_log] critical high power control reached!";
       std::string interfaceName;
       boost::container::flat_map<std::string,
           std::variant<bool, std::string>> propertiesChanged;
@@ -95,7 +94,7 @@ namespace nf_pwr_ctrl
       }
       catch (sdbusplus::exception_t&)
       {
-          std::cerr << "[PWCTL_log]error reading message";
+          std::cerr << "[PWCTL_log]error reading message"<<std::endl;
           return;
       }
       // state: interface property state
@@ -112,14 +111,14 @@ namespace nf_pwr_ctrl
       if (path.substr(0, pathFront.length()) == pathFront) {
           path.erase(path.length() - pathEnd.length());     
           std::string boardIndex = path.substr(std::string(pathFront).length(), 2);
-          std::cerr << "[PWCTL_log] boardIndex should be a integer : " << boardIndex;
+          std::cerr << "[PWCTL_log] boardIndex should be a integer : " << boardIndex<<std::endl;
 
           // this following code copy from bmcweb /redfish-core/lib/systems.hpp.
           // set the  dbus property state to power.off.
           {
               std::string command = "Power.Off";
               std::string systemId_path;
-              systemId_path.assign("nf_blade_"+boardIndex);
+              systemId_path.assign("nf/blade"+boardIndex);
 
               conn->async_method_call(
                   [systemId_path](
