@@ -120,54 +120,34 @@ namespace nf_pwr_ctrl
               std::string systemId_path;
               systemId_path.assign("nf/blade"+boardIndex);
 
+			  std::string line_name = "slot_"+boardIndex+"_prsnt";
+
+			  /* read GPIO line */
+			  gpiod::line line;
+			  int value;
+			  nf_pwr_ctrl::GPIOLine(line_name, GPIO_IN, line, value);
+			  line.reset();
+              if (!value) {
+                  std::cerr << "[PWCTL_log] Already close state";
+                  return;
+              }
+
+              // send SET command to D-Bus
               conn->async_method_call(
-                  [systemId_path](
-                      const boost::system::error_code ec,
-                      const std::variant<std::string>& property)
-                  {
-                      if (ec)
-                      {
-                          std::cerr << "[PWCTL_log] Critical Warning could not find Dbus power control";
-                          return;
-                      }
-
-                      else
-                      {
-                          std::string status;
-                          const std::string* value =
-                              std::get_if<std::string>(&property);
-
-                          status.assign(*value);
-
-                          if (status == "false")
-                          {
-                              std::cerr << "[PWCTL_log] internal error.";
-                              return;
-                          }
-                      }
-
-                      // send SET command to D-Bus
-                      conn->async_method_call(
-                          [](const boost::system::error_code ec2)
-                          {
-                              if (ec2)
-                              {
-                                  std::cerr << "[PWCTL_log] send stop message failed";
-                                  return;
-                              }
-                          },
-                          "xyz.openbmc_project.nf.power.manager",
-                              "/xyz/openbmc_project/control/" + systemId_path,
-                              "org.freedesktop.DBus.Properties", "Set",
-                              "xyz.openbmc_project.NF.Blade.Power",
-                              "Asserted",
-                              std::variant<std::string>{"Power.Off"});
-                  },
-                  "xyz.openbmc_project.nf.power.manager",
-                      "/xyz/openbmc_project/control/" + systemId_path,
-                      "org.freedesktop.DBus.Properties", "Get",
-                      "xyz.openbmc_project.NF.Blade.Power", "Attached");
-          }
+                [](const boost::system::error_code ec2)
+                {
+                    if (ec2)
+                    {
+                        std::cerr << "[PWCTL_log] send stop message failed";
+                        return;
+                    }
+                },
+                "xyz.openbmc_project.nf.power.manager",
+                    "/xyz/openbmc_project/control/" + systemId_path,
+                    "org.freedesktop.DBus.Properties", "Set",
+                    "xyz.openbmc_project.NF.Blade.Power",
+                    "Asserted",
+                    std::variant<std::string>{"Power.Off"});
       }
   }
 
