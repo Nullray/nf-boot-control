@@ -84,71 +84,64 @@ namespace nf_pwr_ctrl
     std::cerr << "line_name: " << line_name << "\n";
   }
 
-  static void CriticalhighPowerControl(sdbusplus::message::message& msg) {
-      std::string interfaceName;
-      boost::container::flat_map<std::string,
-          std::variant<bool, std::string>> propertiesChanged;
-      try
-      {
-          msg.read(interfaceName,propertiesChanged);
-      }
-      catch (sdbusplus::exception_t&)
-      {
-          std::cerr << "[PWCTL_log]error reading message"<<std::endl;
-          return;
-      }
-      // state: interface property state
-      bool state = std::get<bool>(propertiesChanged.begin()->second);
-      // alarm high or alarm low
-      bool highAlarm = (propertiesChanged.begin()->first == "CriticalAlarmHigh");
-      if (state == false || highAlarm == false)return;
+  static void CriticalhighPowerControl()
+  {
+    static auto powermatch = sdbusplus::bus::match::match(
+      *conn,
+      "type='signal',member='PropertiesChanged',"
+      "path_namespace='/xyz/openbmc_project/sensors/power',"
+      "arg0='xyz.openbmc_project.Sensor.Threshold.Critical'",
+      [](sdbusplus::message::message& m) {
+        std::string interfaceName;
+        boost::container::flat_map<std::string,
+            std::variant<bool, std::string>> propertiesChanged;
 
-      static std::string pathFront = "/xyz/openbmc_project/sensors/power/NF";
-      static std::string pathEnd = "_power";
+        m.read(interfaceName, propertiesChanged);
       
-      std::string path = std::string(msg.get_path());
-      //regex path to get the name of the sensor who send the critical message
-      if (path.substr(0, pathFront.length()) == pathFront) {
-          path.erase(path.length() - pathEnd.length());     
-          std::string boardIndex = path.substr(std::string(pathFront).length(), 2);
-          std::cerr << "[PWCTL_log] boardIndex should be a integer : " << boardIndex<<std::endl;
+        // check if changed property is CriticalAlaramHigh
+        if (propertiesChanged.begin()->first != "CriticalAlarmHigh")
+          return;
+              
+        // read changed property value
+        auto state = std::get<bool>(propertiesChanged.begin()->second);
+        if (!state)
+          return;
+      
+        static std::string pathFront = "/xyz/openbmc_project/sensors/power/NF";
+        static std::string pathEnd = "_power";
+            
+        std::string path = std::string(m.get_path());
 
-          // this following code copy from bmcweb /redfish-core/lib/systems.hpp.
-          // set the  dbus property state to power.off.
+        //regex path to get the name of the sensor who send the critical message
+        if (path.substr(0, pathFront.length()) != pathFront)
+          return;
+              
+        path.erase(path.length() - pathEnd.length());
+        std::string boardIndex = path.substr(std::string(pathFront).length(), 2);
+        std::cerr << "[PWCTL_log] boardIndex should be a integer : " << boardIndex<<std::endl;
+
+        // Set D-Bus attribute xyz/openbmc_project/control/nf/blade<x>/Asserted to Power.Off.
+        // in which GPIO pwr line is cleared as a side effect of D-Bus SET
+        std::string systemId_path;
+        systemId_path.assign("nf/blade" + boardIndex);
+              
+        // Send D-Bus SET command 
+        conn->async_method_call(
+          [](const boost::system::error_code ec2)
           {
-              std::string command = "Power.Off";
-              std::string systemId_path;
-              systemId_path.assign("nf/blade"+boardIndex);
-
-			  std::string line_name = "slot_"+boardIndex+"_prsnt";
-
-			  /* read GPIO line */
-			  gpiod::line line;
-			  int value;
-			  nf_pwr_ctrl::GPIOLine(line_name, GPIO_IN, line, value);
-			  line.reset();
-              if (!value) {
-                  std::cerr << "[PWCTL_log] Already close state";
-                  return;
-              }
-
-              // send SET command to D-Bus
-              conn->async_method_call(
-                [](const boost::system::error_code ec2)
-                {
-                    if (ec2)
-                    {
-                        std::cerr << "[PWCTL_log] send stop message failed";
-                        return;
-                    }
-                },
-                "xyz.openbmc_project.nf.power.manager",
-                    "/xyz/openbmc_project/control/" + systemId_path,
-                    "org.freedesktop.DBus.Properties", "Set",
-                    "xyz.openbmc_project.NF.Blade.Power",
-                    "Asserted",
-                    std::variant<std::string>{"Power.Off"});
-      }
+            if (ec2)
+            {
+              std::cerr << "[PWCTL_log] send D-Bus Power.Off message failed";
+              return;
+            }
+          },
+          "xyz.openbmc_project.nf.power.manager",
+            "/xyz/openbmc_project/control/" + systemId_path,
+            "org.freedesktop.DBus.Properties", "Set",
+            "xyz.openbmc_project.NF.Blade.Power",
+            "Asserted",
+            std::variant<std::string>{"Power.Off"});
+      });
   }
 
   static void PowerControl()
@@ -194,15 +187,6 @@ namespace nf_pwr_ctrl
           return;
         }
       });
-    static auto powermatch = sdbusplus::bus::match::match(
-        *conn,
-        "type='signal',member='PropertiesChanged',"
-        "path_namespace='/xyz/openbmc_project/sensors/power',"
-        "arg0='xyz.openbmc_project.Sensor.Threshold.Critical'",
-        [](sdbusplus::message::message& m) {
-            CriticalhighPowerControl(m);
-        }
-    );
   }
 }
 
@@ -357,7 +341,8 @@ int main(int argc, char* argv[])
   gpioLine.reset();
   
   nf_pwr_ctrl::PowerControl();
-  
+  nf_pwr_ctrl::CriticalhighPowerControl();
+
   nf_pwr_ctrl::io.run();
   
   return 0;
