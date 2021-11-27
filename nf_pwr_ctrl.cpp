@@ -3,6 +3,7 @@
 #include <gpiod.hpp>
 #include <string.h>
 #include <iostream>
+#include <stdio.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <sdbusplus/asio/object_server.hpp>
@@ -175,11 +176,49 @@ namespace nf_pwr_ctrl
             value = 0;
           else
             value = 1;
-          
+          std::string blade_number = obj_path.substr(std::string("blade").length(), 2).c_str();
+          if (0 == value)
+          {
+              FILE* fp = NULL;
+              fp = fopen(std::string("/sys/kernel/config/device-tree/overlays/nf_blade_" + blade_number + "/status").c_str(), "w");
+              if (fopen == NULL) {
+                  std::cerr << "[PWCTL_log] failed to open file pointer to status" << blade_number << std::endl;
+              }
+              else {
+                  fprintf(fp, "1");
+                  fclose(fp);
+                  std::cerr << "[PWCTL_log] write 1 to nf_blade_" << blade_number <<"/status" << std::endl;
+              }
+          }
           GPIOLine(line_name, GPIO_OUT, line, value);
-
           // Release line
           line.reset();
+          // Activate dbus i2c for entity manager
+          if (value)
+          {
+              FILE* fp = NULL;
+              fp = fopen(std::string("/sys/kernel/config/device-tree/overlays/nf_blade_" + blade_number + "/status").c_str(), "w");
+              if (fopen == NULL) {
+                  std::cerr << "[PWCTL_log] failed to open file pointer to status" << blade_number << std::endl;
+              }
+              else {
+                  fprintf(fp, "0");
+                  fclose(fp);
+                  std::cerr << "[PWCTL_log] write 0 to nf_blade_" << blade_number <<"/status" << std::endl;
+              }
+          }
+          conn->async_method_call(
+              [](boost::system::error_code ec){
+                  if (ec)
+                  {
+                      std::cerr << "[PWCTL_log] rescan request error!";
+                      return;
+                  }
+                  std::cerr << "[PWCTL_log] asking FruDevice to rescan" << std::endl;
+              },
+              "xyz.openbmc_project.FruDevice",
+              "/xyz/openbmc_project/FruDevice",
+              "xyz.openbmc_project.FruDeviceManager","ReScan");
         }
         catch (std::exception& e)
         {
