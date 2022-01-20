@@ -177,6 +177,7 @@ namespace nf_pwr_ctrl
           else
             value = 1;
           std::string blade_number = obj_path.substr(std::string("blade").length(), 2).c_str();
+          std::cerr << "[PWCTL_log]value1 = " << "value";
           if (0 == value)
           {
               FILE* fp = NULL;
@@ -194,6 +195,7 @@ namespace nf_pwr_ctrl
           // Release line
           line.reset();
           // Activate dbus i2c for entity manager
+          std::cerr << "[PWCTL_log]value2 = " << "value";
           if (value)
           {
               FILE* fp = NULL;
