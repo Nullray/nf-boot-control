@@ -177,8 +177,8 @@ namespace nf_pwr_ctrl
           else
             value = 1;
           std::string blade_number = obj_path.substr(std::string("blade").length(), 2).c_str();
-          std::cerr << "[PWCTL_log]value1 = " << "value";
-          if (0 == value)
+          std::cerr << "[PWCTL_log]value1 = " << value;
+          if (0 == value) //value = 0
           {
               FILE* fp = NULL;
               fp = fopen(std::string("/sys/kernel/config/device-tree/overlays/nf_blade_" + blade_number + "/status").c_str(), "w");
@@ -195,7 +195,7 @@ namespace nf_pwr_ctrl
           // Release line
           line.reset();
           // Activate dbus i2c for entity manager
-          std::cerr << "[PWCTL_log]value2 = " << "value";
+          std::cerr << "[PWCTL_log]value2 = " << value;
           if (value)
           {
               FILE* fp = NULL;
