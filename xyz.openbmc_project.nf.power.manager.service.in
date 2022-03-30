@@ -1,14 +1,14 @@
 [Unit]
-Description=NF card Power Control
+Description=NF card Boot Control
 
 [Service]
 Restart=always
 RestartSec=3
 StartLimitBurst=10
-ExecStart=@bindir@/nf_pwr_ctrl
-SyslogIdentifier=nf_pwr_ctrl
+ExecStart=@bindir@/nf_boot_ctrl
+SyslogIdentifier=nf_boot_ctrl
 Type=dbus
-BusName=xyz.openbmc_project.nf.power.manager
+BusName=xyz.openbmc_project.nf.boot.manager
 
 [Install]
 WantedBy=multi-user.target
