@@ -22,9 +22,8 @@ namespace nf_boot_ctrl
   static constexpr const char* nfBootIface = "xyz.openbmc_project.NF.Blade.Boot";
   static std::string nfBootPath = "/xyz/openbmc_project/control/nf/";
   static std::string nfBladePath[MAX_NF_CARD_NUMS];
-}
 
-  static void BootControl()
+    static void BootControl()
   {
     static auto match = sdbusplus::bus::match::match(
       *conn,
@@ -56,6 +55,9 @@ namespace nf_boot_ctrl
         }
       });
   }
+}
+
+
 
 int main(int argc, char* argv[])
 {
