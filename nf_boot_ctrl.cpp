@@ -3,6 +3,7 @@
 #include <string.h>
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <sdbusplus/asio/object_server.hpp>
@@ -10,9 +11,6 @@
 #include <variant>
 
 #define MAX_NF_CARD_NUMS 16
-
-#define GPIO_IN   0
-#define GPIO_OUT  1
 
 namespace nf_boot_ctrl
 {
@@ -25,6 +23,39 @@ namespace nf_boot_ctrl
   static std::string nfBootPath = "/xyz/openbmc_project/control/nf/";
   static std::string nfBladePath[MAX_NF_CARD_NUMS];
 }
+
+  static void BootControl()
+  {
+    static auto match = sdbusplus::bus::match::match(
+      *conn,
+      "type='signal',member='PropertiesChanged', "
+      "interface='org.freedesktop.DBus.Properties', "
+      "arg0namespace=xyz.openbmc_project.NF.Blade.Boot",
+      [](sdbusplus::message::message& m) {
+        std::string intfName;
+        boost::container::flat_map<std::string, 
+        std::variant<bool, std::string>> propertiesChanged;
+        
+        m.read(intfName, propertiesChanged);
+        
+        try
+        {
+          auto state = std::get<std::string>(propertiesChanged.begin()->second);
+          std::cerr << "state: " << state << "\n";
+          std::string value;
+          if (state == "Cd")
+            value = "mmc0";
+          else if (state == "Pxe")
+            value = "pxe";
+          std::cerr << "[BOOTCTL_log]value1 = " << value;
+        }
+        catch (std::exception& e)
+        {
+          std::cerr << "Unable to read property\n";
+          return;
+        }
+      });
+  }
 
 int main(int argc, char* argv[])
 {
@@ -56,7 +87,7 @@ int main(int argc, char* argv[])
     
     /** add *BootMode * dbus property to nf/blade<x>/ dbus object */
     nf_boot_ctrl::nfBladeIface[i]->register_property("BootMode", 
-      std::string("SD"), 
+      std::string("Cd"), 
       sdbusplus::asio::PropertyPermission::readWrite);
     
     /** add *Reset* dbus property to nf/blade<x>/ dbus object */
@@ -66,7 +97,8 @@ int main(int argc, char* argv[])
     
     nf_boot_ctrl::nfBladeIface[i]->initialize();
   }
-  
+
+  nf_boot_ctrl::BootControl();
   nf_boot_ctrl::io.run();
   
   return 0;
