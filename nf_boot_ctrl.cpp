@@ -47,6 +47,7 @@ namespace nf_boot_ctrl
           else if (state == "Pxe")
             value = "pxe";
           std::cerr << "[BOOTCTL_log]value1 = " << value;
+          std::system("echo -e \"" +value "\"" "> /sys/bus/i2c/devices/8-0050/eeprom")
         }
         catch (std::exception& e)
         {
