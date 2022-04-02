@@ -36,7 +36,9 @@ namespace nf_boot_ctrl
         std::variant<bool, std::string>> propertiesChanged;
         
         m.read(intfName, propertiesChanged);
-        
+        std::string obj_path;
+        obj_path = m.get_path();
+
         try
         {
           auto state = std::get<std::string>(propertiesChanged.begin()->second);
@@ -46,8 +48,12 @@ namespace nf_boot_ctrl
             value = "mmc0\0";
           else if (state == "Pxe")
             value = "pxe\0";
+          else
+            std::cerr << "Unable to set property\n";
+            return
+          std::int blade_number = atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
           std::cerr << "[BOOTCTL_log]value1 = " << value;
-          std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/8-0050/eeprom";
+          std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number+8) + "-0050/eeprom";
           std::system(cmd.c_str());
         }
         catch (std::exception& e)
