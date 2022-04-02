@@ -39,12 +39,12 @@ namespace nf_boot_ctrl
         std::string obj_path;
         obj_path = m.get_path();
         std::int32_t blade_number = std::atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
-        
+
         try
         {
           auto state = std::get<std::string>(propertiesChanged.begin()->second);
           std::cerr << "state: " << state << "\n";
-          std::cerr << "obj_path: " << obj_path << "\n";
+          std::cerr << "blade_number: " << std::to_string(blade_number+8) << "\n";
           std::string value;
           if (state == "Cd")
             value = "\"mmc0\\0\"";
