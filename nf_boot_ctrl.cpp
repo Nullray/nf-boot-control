@@ -50,6 +50,10 @@ namespace nf_boot_ctrl
             value = "\"mmc0\\0\"";
           else if (state == "Pxe")
             value = "\"pxe\\0\"";
+          else{
+            std::cerr << "Unable to set property\n";
+            return;
+          }
           std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number+8) + "-0050/eeprom";
           std::cerr << "bootcmd: " << cmd << "\n";
           std::system(cmd.c_str());
