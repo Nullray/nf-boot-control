@@ -54,6 +54,7 @@ namespace nf_boot_ctrl
           std::int32_t blade_number = atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
           std::cerr << "[BOOTCTL_log]value1 = " << value;
           std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number+8) + "-0050/eeprom";
+          std::cerr << "bootcmd: " << cmd << "\n";
           std::system(cmd.c_str());
         }
         catch (std::exception& e)
