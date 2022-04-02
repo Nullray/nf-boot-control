@@ -51,7 +51,7 @@ namespace nf_boot_ctrl
           else
             std::cerr << "Unable to set property\n";
             return;
-          std::int blade_number = atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
+          std::int32_t blade_number = atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
           std::cerr << "[BOOTCTL_log]value1 = " << value;
           std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number+8) + "-0050/eeprom";
           std::system(cmd.c_str());
