@@ -38,7 +38,8 @@ namespace nf_boot_ctrl
         m.read(intfName, propertiesChanged);
         std::string obj_path;
         obj_path = m.get_path();
-
+        std::int32_t blade_number = std::atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
+        
         try
         {
           auto state = std::get<std::string>(propertiesChanged.begin()->second);
@@ -52,7 +53,6 @@ namespace nf_boot_ctrl
           else
             std::cerr << "Unable to set property\n";
             return;
-          std::int32_t blade_number = atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
           std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number+8) + "-0050/eeprom";
           std::cerr << "bootcmd: " << cmd << "\n";
           std::system(cmd.c_str());
