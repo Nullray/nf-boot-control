@@ -45,12 +45,12 @@ namespace nf_boot_ctrl
           std::cerr << "state: " << state << "\n";
           std::string value;
           if (state == "Cd")
-            value = "mmc0\0";
+            value = "\"mmc0\0\"";
           else if (state == "Pxe")
-            value = "pxe\0";
+            value = "\"pxe\0\"";
           else
             std::cerr << "Unable to set property\n";
-            return
+            return;
           std::int blade_number = atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
           std::cerr << "[BOOTCTL_log]value1 = " << value;
           std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number+8) + "-0050/eeprom";
