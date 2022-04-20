@@ -23,7 +23,7 @@ namespace nf_boot_ctrl
   static std::string nfBootPath = "/xyz/openbmc_project/control/nf/";
   static std::string nfBladePath[MAX_NF_CARD_NUMS];
 
-    static void BootControl()
+  static void BootControl()
   {
     static auto match = sdbusplus::bus::match::match(
       *conn,
@@ -38,6 +38,17 @@ namespace nf_boot_ctrl
         m.read(intfName, propertiesChanged);
         std::string obj_path;
         obj_path = m.get_path();
+
+        size_t pos = 0;
+        std::string token;    
+        std::string delimiter = "/";
+        std::string blade_fix = "blade";
+
+        while((pos = obj_path.find(delimiter)) != std::string::npos) {
+          token = obj_path.substr(0, pos);
+          obj_path.erase(0, pos + delimiter.length());
+        }
+        
         std::cerr << "obj_path: " << obj_path << "\n";
         std::int32_t blade_number = std::atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
 
