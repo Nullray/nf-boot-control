@@ -38,6 +38,7 @@ namespace nf_boot_ctrl
         m.read(intfName, propertiesChanged);
         std::string obj_path;
         obj_path = m.get_path();
+        std::cerr << "obj_path: " << obj_path << "\n";
         std::int32_t blade_number = std::atoi(obj_path.substr(std::string("blade").length(), 2).c_str());
 
         try
