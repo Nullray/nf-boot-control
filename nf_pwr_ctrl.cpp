@@ -366,7 +366,7 @@ int main(int argc, char* argv[])
       nf_pwr_ctrl::nfresetnOut[i], GPIO_OUT, gpioLine, value))
       return -1;
 
-    value = 0;
+    value = 1;
     // set UART and JTAG of each NF card to BH motherboard as default
     if (!nf_pwr_ctrl::GPIOLine(
       nf_pwr_ctrl::nfintfselOut[i], GPIO_OUT, gpioLine, value))
