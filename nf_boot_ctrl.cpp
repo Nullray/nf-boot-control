@@ -9,6 +9,8 @@
 #include <sdbusplus/asio/object_server.hpp>
 #include <sdbusplus/vtable.hpp>
 #include <variant>
+#include <boost/container/flat_map.hpp>
+
 
 #define MAX_NF_CARD_NUMS 16
 
