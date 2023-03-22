@@ -58,19 +58,21 @@ namespace nf_boot_ctrl
         {
           auto state = std::get<std::string>(propertiesChanged.begin()->second);
           std::cerr << "state: " << state << "\n";
-          std::cerr << "blade_number: " << std::to_string(blade_number+8) << "\n";
+          std::cerr << "blade_number: " << std::to_string(blade_number) << "\n";
           std::string value;
-          if (state == "Cd")
-            value = "\"mmc0\\0\"";
+          if (state == "Mmc")
+            value = "\"mmc\\0\"";
           else if (state == "Pxe")
             value = "\"pxe\\0\"";
+          else if(state == "Ssd")
+            value = "\"ssd\\0\"";
           else{
             std::cerr << "Unable to set property\n";
             return;
           }
-          std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number+8) + "-0050/eeprom";
+          std::string cmd1 = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number) + "-0050/eeprom";
           std::cerr << "bootcmd: " << cmd << "\n";
-          std::system(cmd.c_str());
+          std::system(cmd1.c_str());
         }
         catch (std::exception& e)
         {
@@ -113,9 +115,11 @@ int main(int argc, char* argv[])
     
     /** add *BootMode * dbus property to nf/blade<x>/ dbus object */
     nf_boot_ctrl::nfBladeIface[i]->register_property("BootMode", 
-      std::string("Cd"), 
+      std::string("Mmc"), 
       sdbusplus::asio::PropertyPermission::readWrite);
-    
+    nf_boot_ctrl::nfBladeIface[i]->register_property("BootMode", 
+      std::string("Ssd"), 
+      sdbusplus::asio::PropertyPermission::readWrite);
     /** add *Reset* dbus property to nf/blade<x>/ dbus object */
     nf_boot_ctrl::nfBladeIface[i]->register_property("OneTime", 
       std::string("true"), 
