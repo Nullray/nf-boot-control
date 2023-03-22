@@ -70,9 +70,9 @@ namespace nf_boot_ctrl
             std::cerr << "Unable to set property\n";
             return;
           }
-          std::string cmd1 = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number) + "-0050/eeprom";
+          std::string cmd = "echo -e " + value + " > /sys/bus/i2c/devices/" + std::to_string(blade_number) + "-0050/eeprom";
           std::cerr << "bootcmd: " << cmd << "\n";
-          std::system(cmd1.c_str());
+          std::system(cmd.c_str());
         }
         catch (std::exception& e)
         {
