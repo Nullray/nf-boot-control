@@ -117,9 +117,6 @@ int main(int argc, char* argv[])
     nf_boot_ctrl::nfBladeIface[i]->register_property("BootMode", 
       std::string("Mmc"), 
       sdbusplus::asio::PropertyPermission::readWrite);
-    nf_boot_ctrl::nfBladeIface[i]->register_property("BootMode", 
-      std::string("Ssd"), 
-      sdbusplus::asio::PropertyPermission::readWrite);
     /** add *Reset* dbus property to nf/blade<x>/ dbus object */
     nf_boot_ctrl::nfBladeIface[i]->register_property("OneTime", 
       std::string("true"), 
