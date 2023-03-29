@@ -61,11 +61,11 @@ namespace nf_boot_ctrl
           std::cerr << "blade_number: " << std::to_string(blade_number) << "\n";
           std::string value;
           if (state == "Mmc")
-            value = "\"mmc\\0\"";
+            value = "\"mmc\"";
           else if (state == "Pxe")
-            value = "\"pxe\\0\"";
+            value = "\"pxe\"";
           else if(state == "Ssd")
-            value = "\"ssd\\0\"";
+            value = "\"ssd\"";
           else{
             std::cerr << "Unable to set property\n";
             return;
